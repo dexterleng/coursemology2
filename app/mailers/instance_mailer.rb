@@ -8,6 +8,6 @@ class InstanceMailer < ApplicationMailer
     @invitation = invitation
     @recipient = invitation
 
-    mail(to: invitation.email, subject: t('.subject', instance: @instance.name))
+    mail(to: invitation.email, subject: t('.subject', instance: @instance.name, role: invitation.role))
   end
 end
