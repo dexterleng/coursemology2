@@ -38,8 +38,7 @@ class Course::UserInvitation < ApplicationRecord
 
   private
 
-  # Generates the invitation key. All invitation keys generated start with I so we can
-  # distinguish it from other kinds of keys in future.
+  # Generates the invitation key. course invitation keys generated start with I.
   #
   # @return [void]
   def generate_invitation_key
