@@ -103,7 +103,7 @@ Rails.application.routes.draw do
       namespace :instance do
         get '/' => 'admin#index', as: :admin
         resources :announcements, except: [:show], concerns: :paginatable
-        resources :users, only: [:index, :update, :destroy], concerns: :paginatable
+        resources :users, only: [:index, :new, :update, :destroy], concerns: :paginatable
         resources :courses, only: [:index, :destroy], concerns: :paginatable
         get 'components' => 'components#edit'
         patch 'components' => 'components#update'

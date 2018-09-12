@@ -10,6 +10,7 @@ class Course::UserInvitationsController < Course::ComponentController
   end
 
   def new
+    # what dis do?
     current_course.invitations.build
   end
 
@@ -79,6 +80,9 @@ class Course::UserInvitationsController < Course::ComponentController
   def invitation_params
     @invitation_params ||= course_user_invitation_params[:invitations_file]&.tempfile ||
                            course_user_invitation_params[:invitations_attributes].to_h
+    puts @invitation_params
+    puts "very gay"
+    return @invitation_params
   end
 
   # Returns the param on whether to enable or disable registration via registration code.

@@ -9,6 +9,9 @@ class System::Admin::Instance::UsersController < System::Admin::Instance::Contro
     load_counts
   end
 
+  def new
+  end
+
   def update
     if @instance_user.update_attributes(instance_user_params)
       flash.now[:success] = t('.success', user: @instance_user.user.name)
