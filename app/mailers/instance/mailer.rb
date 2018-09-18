@@ -1,4 +1,4 @@
-class InstanceMailer < ApplicationMailer
+class Instance::Mailer < ApplicationMailer
   # Sends an invitation email for the given invitation.
   #
   # @param [Instance] instance The course that was involved.

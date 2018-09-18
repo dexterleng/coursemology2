@@ -11,12 +11,9 @@ module Instance::UserInvitationService::ParseInvitationConcern
 
   private
 
-  def parse_invitations_from_form(users)
-    users.map do |(_, value)|
-      name = value[:name].presence || value[:email]
-      phantom = ActiveRecord::Type::Boolean.new.cast(value[:phantom])
-      { name: name, email: value[:email].downcase, role: value[:role], phantom: phantom }
-    end
+  def parse_invitation(user)
+    user[:email].downcase!
+    return user
   end
 
 end

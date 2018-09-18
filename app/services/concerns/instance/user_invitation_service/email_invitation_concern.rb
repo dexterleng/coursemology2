@@ -7,13 +7,10 @@ module Instance::UserInvitationService::EmailInvitationConcern
 
   private
 
-  def send_invitation_emails(invitations)
-    invitations.each do |invitation|
-      Instance::Mailer.user_invitation_email(@current_instance, invitation).deliver_later
-    end
-    ids = invitations.select(&:id)
-    Instance::UserInvitation.where(id: ids).update_all(sent_at: Time.zone.now)
-
+  def send_invitation_emails(invitation)
+    Instance::Mailer.user_invitation_email(@current_instance, invitation).deliver_later
+    Instance::UserInvitation.find_by(id: invitation.id).update(sent_at: Time.zone.now)
+    puts Instance::UserInvitation.all
     true
   end
 end

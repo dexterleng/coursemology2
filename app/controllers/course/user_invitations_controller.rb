@@ -10,8 +10,7 @@ class Course::UserInvitationsController < Course::ComponentController
   end
 
   def new
-    # what dis do?
-    current_course.invitations.build
+     current_course.invitations.build
   end
 
   def create
@@ -65,6 +64,8 @@ class Course::UserInvitationsController < Course::ComponentController
   private
 
   def course_user_invitation_params # :nodoc:
+    puts params
+    puts "o shit"
     @course_user_invitation_params ||= begin
       params[:course] = { invitations_attributes: {} } unless params.key?(:course)
 
@@ -80,8 +81,6 @@ class Course::UserInvitationsController < Course::ComponentController
   def invitation_params
     @invitation_params ||= course_user_invitation_params[:invitations_file]&.tempfile ||
                            course_user_invitation_params[:invitations_attributes].to_h
-    puts @invitation_params
-    puts "very gay"
     return @invitation_params
   end
 

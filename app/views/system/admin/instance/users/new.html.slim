@@ -1,0 +1,23 @@
+= page_header
+
+= simple_form_for @invite, url: admin_instance_users_path, method: :post do |f|
+    = f.error_notification
+    table.table.table-hover
+        thead
+        tr
+            th = t('common.name')
+            th = t('common.email')
+            th = t('common.role')
+            th
+        tbody
+            td = f.input :name, label: false, input_html: { class: 'invitation_name' }
+            td = f.input :email, required: true, label: false, input_html: { class: 'invitation_email' }
+            td = f.input :role,
+               as: :select,
+               collection: Instance::UserInvitation.roles.keys,
+               label: false,
+               label_method: lambda { |role_key| t("instance.users.role.#{role_key}") },
+               include_blank: false,
+               input_html: { class: 'invitation_role' }
+
+    = f.button :submit

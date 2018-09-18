@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class System::Admin::Instance::UsersController < System::Admin::Instance::Controller
   load_and_authorize_resource :instance_user, class: InstanceUser.name,
-                                              parent: false, except: [:index]
+                                              parent: false, except: [:index, :new, :create]
   add_breadcrumb :index, :admin_instance_users_path
 
   def index
@@ -10,6 +10,14 @@ class System::Admin::Instance::UsersController < System::Admin::Instance::Contro
   end
 
   def new
+    @invite = @instance.invitations.build
+  end
+
+  def create
+    #result = invite
+    #@invite = @instance.invitations.build(instance_user_invitation_params)
+    result = invite
+    redirect_to admin_instance_users_path
   end
 
   def update
@@ -46,10 +54,35 @@ class System::Admin::Instance::UsersController < System::Admin::Instance::Contro
   end
 
   def instance_user_params
+    puts "params gay"
+    puts params
     params.require(:instance_user).permit(:role)
   end
 
   def search_param
     params.permit(:search)[:search]
+  end
+
+  # Invites the users via the service object.
+  #
+  # @return [Boolean] True if the invitation was successful.
+  def invite
+    invitation_service.invite(instance_user_invitation_params)
+  end
+
+  def invitation_service
+    @invitation_service ||= Instance::UserInvitationService.new(current_instance_user, @instance)
+  end
+
+  def instance_user_invitation_params # :nodoc:
+    # puts "yo gobba"
+    # puts params
+    # @instance_user_invitation_params ||= begin
+    #   params[:instance] = { invitations_attributes: {} } unless params.key?(:instance)
+
+    #   params.require(:instance).permit(:invitations_file, :registration_key,
+    #                                  invitations_attributes: [:name, :email, :role])
+    # end
+    params.require(:user_invitation).permit(:name, :email, :role)
   end
 end
