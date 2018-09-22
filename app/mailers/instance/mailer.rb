@@ -10,4 +10,11 @@ class Instance::Mailer < ApplicationMailer
 
     mail(to: invitation.email, subject: t('.subject', instance: @instance.name, role: invitation.role))
   end
+
+  def user_added_email(instance, user)
+    @instance = instance
+    @recipient = user.user
+
+    mail(to: @recipient.email, subject: t('.subject', instance: @instance.name))
+  end
 end

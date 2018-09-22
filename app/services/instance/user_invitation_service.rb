@@ -26,21 +26,56 @@ class Instance::UserInvitationService
     # @raise [CSV::MalformedCSVError] When the file provided is invalid.
     def invite(user)
       user = parse_invitation(user)
-      if User::Email.exists?(email: user[:email])
-        puts "user with that email already exists"
-      elsif Instance::UserInvitation.exists?(email: user[:email])
-        puts "Invite with that email already exists"
-      else
-        invitation = nil
-        success = Instance.transaction do
-          invitation = @current_instance.invitations.build(email: user[:email], name: user[:name], role: user[:role])
-          invitation.save!
-          true
+      if user_exists?(user)
+        unless user_is_in_current_instance?(user)
+          invite_registered_user(user)
+          return true
         end
-        puts Instance::UserInvitation.all
-        send_invitation_emails(invitation) if success 
-        
+      else
+        unless user_invitation_exists?(user)
+          invite_new_user(user)
+          return true
+        end
       end
+      false
+    end
+
+    def user_exists?(user)
+      User::Email.exists?(email: user[:email])
+    end
+
+    def user_is_in_current_instance?(user)
+      User.joins(:instance_users, :emails).exists?(
+        user_emails: { email: user[:email] }, 
+        instance_users: { instance: @current_instance }
+      )
+    end
+
+    def user_invitation_exists?(user)
+      Instance::UserInvitation.exists?(email: user[:email], instance: @current_instance)
+    end
+
+    def invite_new_user(user)
+      invitation = nil
+      success = Instance.transaction do
+        invitation = @current_instance.invitations.build(email: user[:email], name: user[:name], role: user[:role])
+        invitation.save!
+        true
+      end
+      send_invitation_email(invitation) if success 
+    end
+
+    def invite_registered_user(user)
+      instance_user = nil
+      success = Instance.transaction do
+        instance_user = @current_instance.instance_users.build(user: User.with_email_address([user[:email]]), role: user[:role])
+        puts "bockham"
+        puts instance_user.inspect
+        puts instance_user.valid?
+        instance_user.save!
+        true
+      end
+      send_registered_email(instance_user) if success
     end
   
     # Resends invitation emails to CourseUsers to the given course.
@@ -52,6 +87,8 @@ class Instance::UserInvitationService
     def resend_invitation(invitations)
       invitations.blank? ? true : send_invitation_emails(invitations)
     end
+
+
   
   end
   

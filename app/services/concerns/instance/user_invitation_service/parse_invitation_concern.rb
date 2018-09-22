@@ -12,8 +12,7 @@ module Instance::UserInvitationService::ParseInvitationConcern
   private
 
   def parse_invitation(user)
-    user[:email].downcase!
-    return user
+    { name: user[:name], email: user[:email].downcase, role: user[:role]}
   end
 
 end

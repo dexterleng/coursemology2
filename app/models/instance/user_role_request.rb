@@ -11,6 +11,7 @@ class Instance::UserRoleRequest < ApplicationRecord
   #
   # @return [Array(Boolean, InstanceUser)] returns success status and the updated instance user.
   def approve_and_destroy!
+    puts "The big gay"
     instance_user = InstanceUser.find_or_initialize_by(user_id: user_id)
     instance_user.role = role
     success = self.class.transaction do

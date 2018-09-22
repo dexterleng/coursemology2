@@ -70,7 +70,7 @@ class User < ApplicationRecord
   end)
   scope :with_email_addresses, (lambda do |email_addresses|
     includes(:emails).joins(:emails).where('user_emails.email IN (?)', email_addresses)
-  end)
+  end) 
 
   # Gets whether the current user is one of the the built in users.
   #
@@ -115,5 +115,9 @@ class User < ApplicationRecord
     result = valid_emails.find(&:primary?)
     result ||= valid_emails.first
     result
+  end
+
+  def self.with_email_address(email_address)
+    joins(:emails).where( user_emails: { email: email_address } ).first
   end
 end
