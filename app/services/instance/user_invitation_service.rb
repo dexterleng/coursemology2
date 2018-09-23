@@ -69,9 +69,6 @@ class Instance::UserInvitationService
       instance_user = nil
       success = Instance.transaction do
         instance_user = @current_instance.instance_users.build(user: User.with_email_address([user[:email]]), role: user[:role])
-        puts "bockham"
-        puts instance_user.inspect
-        puts instance_user.valid?
         instance_user.save!
         true
       end
