@@ -11,6 +11,10 @@ module Instance::UserInvitationService::ParseInvitationConcern
 
   private
 
+  # Copies and downcases email of user
+  #
+  # @param [Hash] user
+  # @return [Hash] copy of the hash with :email downcased
   def parse_invitation(user)
     { name: user[:name], email: user[:email].downcase, role: user[:role]}
   end

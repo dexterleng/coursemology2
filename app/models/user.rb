@@ -100,6 +100,8 @@ class User < ApplicationRecord
     if (invitation.invitation_key.first == 'I')
       course_users.build(course: invitation.course, name: invitation.name, role: invitation.role,
                        phantom: invitation.phantom, creator: self, updater: self)
+    else
+      @instance_role = invitation.role
     end
   end
 

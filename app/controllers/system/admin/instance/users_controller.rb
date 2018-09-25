@@ -17,7 +17,11 @@ class System::Admin::Instance::UsersController < System::Admin::Instance::Contro
     #result = invite
     #@invite = @instance.invitations.build(instance_user_invitation_params)
     result = invite
-    redirect_to admin_instance_users_path
+    if result
+      redirect_to admin_instance_users_path, success: t('.success')
+    else
+      redirect_to new_admin_instance_user_path, danger: create_form_error_message
+    end
   end
 
   def update
@@ -85,4 +89,11 @@ class System::Admin::Instance::UsersController < System::Admin::Instance::Contro
     # end
     params.require(:user_invitation).permit(:name, :email, :role)
   end
+
+  def create_form_error_message
+    invitation_error = @instance.invitations.reject(&:valid?).first&.errors&.full_messages&.to_sentence
+    instance_user_error = @instance.instance_users.reject(&:valid?).first&.errors&.full_messages&.to_sentence
+    invitation_error || instance_user_error
+  end
+
 end

@@ -131,6 +131,10 @@ group :development, :test do
   # Use RSpec for Behaviour testing
   gem 'rspec-rails'
 
+  gem 'spring-commands-rspec'
+  gem 'guard-rspec'
+  gem 'rb-fsevent' if `uname` =~ /Darwin/
+
   # Factory Bot for factories
   gem 'factory_bot_rails'
 

@@ -3,76 +3,62 @@
 # Provides a service object for inviting users into a course.
 class Instance::UserInvitationService
     include ParseInvitationConcern
-    include ProcessInvitationConcern
     include EmailInvitationConcern
   
     # Constructor for the user invitation service object.
     #
     # @param [User] current_user The user performing this action.
-    # @param [Course] current_course The course to invite users to.
+    # @param [Instance] current_instance The instance to invite users to.
     def initialize(current_user, current_instance)
       @current_user = current_user
       @current_instance = current_instance
     end
   
-    # Invites users to the given course.
+    # Invites users to the given instance.
     #
-    # The result of the transaction is both saving the course as well as validating validity
-    # because Rails does not handle duplicate nested attribute uniqueness constraints.
     #
-    # @param [Array<Hash>|File|TempFile] users Invites the given users.
-    # @return [Array<Integer>|nil] An array containing the the size of new_invitations, existing_invitations,
-    #   new_course_users and existing_course_users respectively if success. nil when fail.
-    # @raise [CSV::MalformedCSVError] When the file provided is invalid.
+    # @param [Hash] user Invites the given user.
+    # @return [Boolean] true if instance_user or invitation successfully created.
+    # false otherwise, indicating presence of an error message.
     def invite(user)
       user = parse_invitation(user)
-      if user_exists?(user)
-        unless user_is_in_current_instance?(user)
-          invite_registered_user(user)
-          return true
-        end
-      else
-        unless user_invitation_exists?(user)
-          invite_new_user(user)
-          return true
-        end
-      end
-      false
+      user_exists?(user) ? invite_registered_user(user) : invite_new_user(user)
     end
 
     def user_exists?(user)
       User::Email.exists?(email: user[:email])
     end
 
-    def user_is_in_current_instance?(user)
-      User.joins(:instance_users, :emails).exists?(
-        user_emails: { email: user[:email] }, 
-        instance_users: { instance: @current_instance }
-      )
-    end
-
-    def user_invitation_exists?(user)
-      Instance::UserInvitation.exists?(email: user[:email], instance: @current_instance)
-    end
-
+    # Invites users that are not registered.
+    #
+    #
+    # @param [Hash] user Invites the given user.
+    # @return [Boolean] true if the invitation is valid and false otherwise
+    # false is returned when invitation with the email already exists.
     def invite_new_user(user)
       invitation = nil
       success = Instance.transaction do
         invitation = @current_instance.invitations.build(email: user[:email], name: user[:name], role: user[:role])
-        invitation.save!
-        true
+        invitation.save
       end
       send_invitation_email(invitation) if success 
+      success
     end
 
+    # Invites users that are not registered.
+    #
+    #
+    # @param [Hash] user Invites the given user.
+    # @return [Boolean] true if the instance_user is valid and false otherwise
+    # false is returned when user already exists in the current instance.
     def invite_registered_user(user)
       instance_user = nil
       success = Instance.transaction do
         instance_user = @current_instance.instance_users.build(user: User.with_email_address([user[:email]]), role: user[:role])
-        instance_user.save!
-        true
+        instance_user.save
       end
       send_registered_email(instance_user) if success
+      success
     end
   
     # Resends invitation emails to CourseUsers to the given course.

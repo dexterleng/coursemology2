@@ -19,7 +19,10 @@ module UserAuthenticationConcern
   private
 
   def create_instance_user
-    instance_users.create if persisted? && instance_users.empty?
+    if persisted? && instance_users.empty?
+      @instance_role ||= "normal"
+      instance_users.create(role: @instance_role)
+    end
   end
 
   module ReplacementMethods

@@ -25,6 +25,9 @@ class System::Admin::UsersController < System::Admin::Controller
     end
   end
 
+  def invitations
+  end
+
   private
 
   def load_users

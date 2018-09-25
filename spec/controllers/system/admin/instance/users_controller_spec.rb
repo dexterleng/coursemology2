@@ -24,6 +24,27 @@ RSpec.describe System::Admin::Instance::UsersController, type: :controller do
       end
     end
 
+    describe '#create' do
+      let(:invite_params) do
+        invitation = { name: generate(:name), email: generate(:email) }
+        { user_invitation: invitation }
+      end
+
+      subject { post :create, params: invite_params }
+
+      context 'when a normal user visits the page' do
+        before { sign_in(normal_user) }
+
+        it { expect { subject }.to raise_exception(CanCan::AccessDenied) }
+      end
+
+      context 'when an instance administrator visits the page' do
+        before { sign_in(instance_admin) }
+
+        it { is_expected.to redirect_to admin_instance_users_path }
+      end
+    end
+
     describe '#update' do
       let!(:instance_user) { create(:instance_user) }
 

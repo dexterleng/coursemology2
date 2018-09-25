@@ -17,6 +17,8 @@
             normal_count: user_count_link(params, @counts[:active][:normal], { active: 'true', role: 'normal' }),
             all_count: user_count_link(params, @counts[:active].values.sum, { active: 'true' }))
 
+
+= render partial: 'tabs'
 = render partial: 'layouts/search_form', locals: { url: admin_instance_users_path, placeholder: t('.search_placeholder') }
 
 table.table.table-middle-align.table-hover
