@@ -145,14 +145,14 @@ RSpec.describe Course::UserInvitationService, type: :service do
           new_users.push(new_users.last)
         end
 
-        it 'ignores duplicate users' do
-          expect(invite).to eq([new_user_attributes.size - 2, 0, existing_user_attributes.size, 0, 2])
+        it 'processes duplicate users only once' do
+          expect(invite).to eq([new_user_attributes.size - 1, 0, existing_user_attributes.size, 0, 1])
         end
 
         with_active_job_queue_adapter(:test) do
           it 'does not send any notifications to duplicate users' do
             expect { invite }.to change { ActionMailer::Base.deliveries.count }.
-              by(new_user_attributes.size - 2 + existing_user_attributes.size)
+              by(new_user_attributes.size - 1 + existing_user_attributes.size)
           end
         end
       end

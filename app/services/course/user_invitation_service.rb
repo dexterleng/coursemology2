@@ -75,7 +75,7 @@ class Course::UserInvitationService
     users, duplicate_users = parse_invitations(users)
 
     # Process the duplicate users once instead of totally ignoring them.
-    unique_duplicates = duplicate_users.uniq
+    unique_duplicates = duplicate_users.uniq { |user| user[:email] }
     users += unique_duplicates
     # Remove one of each duplicate user from the duplicate_users array so the
     # count in the warning message will be correct.
