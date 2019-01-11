@@ -8,7 +8,7 @@ class Course::Survey::SurveyExportService
     questions = survey.questions
     header = generate_header(questions)
 
-    CSV.generate(headers: true) do |csv|
+    CSV.generate(headers: true, force_quotes: true) do |csv|
       csv << header
       responses.each do |response|
         row = []
