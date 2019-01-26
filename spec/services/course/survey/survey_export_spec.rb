@@ -34,8 +34,7 @@ RSpec.describe Course::Survey::SurveyExportService do
           end
 
           it 'selected options are delimitted by semicolons' do
-            service = Course::Survey::SurveyExportService.new
-            csv = service.export(survey)
+            csv = Course::Survey::SurveyExportService.export(survey)
             csv_arr = CSV.parse(csv)
             expect(csv_arr[1][1]).to eq('O1;O2;O3')
           end
@@ -43,8 +42,7 @@ RSpec.describe Course::Survey::SurveyExportService do
 
         context 'when no options are selected' do
           it 'selected options are delimitted by semicolons' do
-            service = Course::Survey::SurveyExportService.new
-            csv = service.export(survey)
+            csv = Course::Survey::SurveyExportService.export(survey)
             csv_arr = CSV.parse(csv)
             expect(csv_arr[1][1]).to eq('')
           end
@@ -60,8 +58,7 @@ RSpec.describe Course::Survey::SurveyExportService do
           end
 
           it 'selected options are delimitted by semicolons' do
-            service = Course::Survey::SurveyExportService.new
-            csv = service.export(survey)
+            csv = Course::Survey::SurveyExportService.export(survey)
             csv_arr = CSV.parse(csv)
             expect(csv_arr[1][1]).to eq('O1')
           end
@@ -69,8 +66,7 @@ RSpec.describe Course::Survey::SurveyExportService do
 
         context 'when no options are selected' do
           it 'selected options are delimitted by semicolons' do
-            service = Course::Survey::SurveyExportService.new
-            csv = service.export(survey)
+            csv = Course::Survey::SurveyExportService.export(survey)
             csv_arr = CSV.parse(csv)
             expect(csv_arr[1][1]).to eq('')
           end
@@ -84,8 +80,7 @@ RSpec.describe Course::Survey::SurveyExportService do
           let!(:answer) { create(:course_survey_answer, response: response, question: question, text_response: 'TEXT') }
 
           it 'the text is included as a value' do
-            service = Course::Survey::SurveyExportService.new
-            csv = service.export(survey)
+            csv = Course::Survey::SurveyExportService.export(survey)
             csv_arr = CSV.parse(csv)
             expect(csv_arr[1][1]).to eq('TEXT')
           end
@@ -95,8 +90,7 @@ RSpec.describe Course::Survey::SurveyExportService do
           let!(:answer) { create(:course_survey_answer, response: response, question: question, text_response: nil) }
 
           it 'empty string is included as a value' do
-            service = Course::Survey::SurveyExportService.new
-            csv = service.export(survey)
+            csv = Course::Survey::SurveyExportService.export(survey)
             csv_arr = CSV.parse(csv)
             expect(csv_arr[1][1]).to eq('')
           end
