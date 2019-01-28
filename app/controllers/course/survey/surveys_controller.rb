@@ -55,6 +55,12 @@ class Course::Survey::SurveysController < Course::Survey::Controller
     head :ok
   end
 
+  def download
+    authorize!(:manage, @survey)
+    csv = Course::Survey::SurveyExportService.export(@survey)
+    send_data csv, filename: "#{@survey.title}.csv"
+  end
+
   private
 
   def render_survey_with_questions_json
