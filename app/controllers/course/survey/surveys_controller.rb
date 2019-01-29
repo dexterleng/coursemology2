@@ -57,8 +57,12 @@ class Course::Survey::SurveysController < Course::Survey::Controller
 
   def download
     authorize!(:manage, @survey)
-    csv = Course::Survey::SurveyExportService.export(@survey)
-    send_data csv, filename: "#{@survey.title}.csv"
+    job = Course::Survey::ZipDownloadJob.
+          perform_later(@survey).job
+    respond_to do |format|
+      format.html { redirect_to(job_path(job)) }
+      format.json { render json: { redirect_url: job_path(job) } }
+    end
   end
 
   private
