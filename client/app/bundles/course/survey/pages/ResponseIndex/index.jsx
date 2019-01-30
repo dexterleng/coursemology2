@@ -16,6 +16,7 @@ import LoadingIndicator from 'lib/components/LoadingIndicator';
 import UnsubmitButton from 'course/survey/containers/UnsubmitButton';
 import { surveyShape, responseShape } from 'course/survey/propTypes';
 import RemindButton from './RemindButton';
+import DownloadResponsesButton from './DownloadResponsesButton';
 
 const styles = {
   red: {
@@ -242,6 +243,7 @@ class ResponseIndex extends React.Component {
           </TableBody>
         </Table>
         <CardText>
+          <DownloadResponsesButton />
           <RemindButton />
         </CardText>
       </Card>
