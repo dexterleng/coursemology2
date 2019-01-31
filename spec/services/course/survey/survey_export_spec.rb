@@ -97,5 +97,39 @@ RSpec.describe Course::Survey::SurveyExportService do
         end
       end
     end
+
+    describe '#generate_row' do
+      describe 'values are generated in the same order as questions'
+      end
+
+      describe 'same no. of values as questions'
+      end
+    end
+
+    describe '#generate_value' do
+      context 'MRQ question' do
+        context 'all options are selected' do
+        end
+
+        context 'no options are selected' do
+        end
+      end
+
+      context 'MCQ question' do
+        context 'one option is selected' do
+        end
+
+        context 'no options are selected' do
+        end
+      end
+
+      context 'Text response question' do
+        context 'when there is text' do
+        end
+
+        context 'when there is no text' do
+        end
+      end
+    end
   end
 end
