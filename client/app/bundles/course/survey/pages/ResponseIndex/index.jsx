@@ -243,8 +243,8 @@ class ResponseIndex extends React.Component {
           </TableBody>
         </Table>
         <CardText>
-          <RemindButton />
           <DownloadResponsesButton />
+          <RemindButton />
         </CardText>
       </Card>
     );
