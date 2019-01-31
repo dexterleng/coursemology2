@@ -6,93 +6,209 @@ RSpec.describe Course::Survey::SurveyExportService do
   let(:instance) { Instance.default }
   with_tenant(:instance) do
     let(:course) { create(:course) }
-    let(:survey) do
-      create(:survey, course: course)
-    end
-    let(:student) { create(:course_student, course: course) }
-    let(:section) { create(:course_survey_section, survey: survey) }
-    let(:survey_traits) { nil }
-    let(:response) do
-      create(:response,
-             survey: survey, creator: student.user, course_user: student, submitted_at: Time.now)
+    let(:student) { create(:course_student, course: course).user }
+    let!(:survey) do
+      create(:survey, course: course, published: true, end_at: Time.zone.now + 1.day,
+                      creator: course.creator, updater: course.creator)
     end
 
     describe '#export' do
-      let!(:option_one) { create(:course_survey_question_option, question: question, option: 'O1') }
-      let!(:option_two) { create(:course_survey_question_option, question: question, option: 'O2') }
-      let!(:option_three) { create(:course_survey_question_option, question: question, option: 'O3') }
-      let!(:answer) { create(:course_survey_answer, response: response, question: question) }
+      subject do
+        CSV.parse(Course::Survey::SurveyExportService.export(survey))
+      end
+
+      let!(:submitted_responses) do
+        [
+          create(:course_survey_response, survey: survey, submitted_at: Time.zone.now),
+          create(:course_survey_response, survey: survey, submitted_at: Time.zone.now),
+          create(:course_survey_response, survey: survey, submitted_at: Time.zone.now)
+        ]
+      end
+
+      let!(:unsubmitted_response) do
+        create(:course_survey_response, survey: survey, creator: student, submitted_at: nil)
+      end
+
+      let!(:questions) do
+        section = create(:course_survey_section, survey: survey)
+        [
+          create(:course_survey_question, question_type: :text, section: section, weight: 3),
+          create(:course_survey_question, question_type: :text, section: section, weight: 2),
+          create(:course_survey_question, question_type: :text, section: section, weight: 1)
+        ]
+      end
+
+      before do
+        submitted_responses.each do |response|
+          create(:course_survey_answer, question: questions[0], response: response, text_response: 'Q1 Answer')
+          create(:course_survey_answer, question: questions[1], response: response, text_response: 'Q2 Answer')
+          create(:course_survey_answer, question: questions[2], response: response, text_response: 'Q3 Answer')
+        end
+      end
+
+      context 'header' do
+        it 'first element is timestamp' do
+          expect(subject[0][0]).to eq('Timestamp')
+        end
+
+        it 'rest is question description in increasing weight' do
+          question_descriptions = questions.sort_by(&:weight).map(&:description)
+          expect(subject[0].slice(1..-1)).to eq(question_descriptions)
+        end
+      end
+
+      context 'rows' do
+        it 'ignores unsubmitted responses' do
+          expect(subject.size - 1).to eq(submitted_responses.size)
+        end
+      end
+    end
+
+    describe '#generate_row' do
+      subject do
+        Course::Survey::SurveyExportService.send(:generate_row, response, questions)
+      end
+
+      let(:response) do
+        create(:course_survey_response, survey: survey, creator: student,
+                                        submitted_at: Time.zone.now)
+      end
+
+      let(:questions) do
+        section = create(:course_survey_section, survey: survey)
+        [
+          create(:course_survey_question, question_type: :text, section: section),
+          create(:course_survey_question, question_type: :text, section: section),
+          create(:course_survey_question, question_type: :text, section: section)
+        ]
+      end
+
+      let!(:answers) do
+        [
+          create(:course_survey_answer, question: questions[0], response: response, text_response: 'Q1 Answer'),
+          create(:course_survey_answer, question: questions[1], response: response, text_response: 'Q2 Answer'),
+          create(:course_survey_answer, question: questions[2], response: response, text_response: 'Q3 Answer')
+        ]
+      end
+
+      it 'returns an array with same length as no. of questions' do
+        expect(subject.size).to eq(questions.size)
+      end
+
+      it 'returns answers that correspond to questions' do
+        expect(subject).to eq(['Q1 Answer', 'Q2 Answer', 'Q3 Answer'])
+      end
+    end
+
+    describe '#generate_value' do
+      subject do
+        Course::Survey::SurveyExportService.send(:generate_value, answer)
+      end
+
+      let(:response) do
+        create(:course_survey_response, survey: survey, creator: student,
+                                        submitted_at: Time.zone.now)
+      end
 
       context 'MRQ question' do
-        let!(:question) { create(:course_survey_question, question_type: :multiple_response, section: section) }
+        let(:question) do
+          section = create(:course_survey_section, survey: survey)
+          create(:course_survey_question, question_type: :multiple_response, section: section)
+        end
+        let(:options) do
+          [
+            create(:course_survey_question_option, question: question, option: 'Cool', weight: 5),
+            create(:course_survey_question_option, question: question, option: 'Nice', weight: 2),
+            create(:course_survey_question_option, question: question, option: 'Ok', weight: 3)
+          ]
+        end
+        let(:answer) do
+          create(:course_survey_answer, question: question, response: response)
+        end
 
-        context 'when all options are selected' do
+        context 'all options are selected' do
           before do
-            answer_option_one = Course::Survey::AnswerOption.create(answer: answer, question_option: option_one)
-            answer_option_two  = Course::Survey::AnswerOption.create(answer: answer, question_option: option_two)
-            answer_option_three = Course::Survey::AnswerOption.create(answer: answer, question_option: option_three)
+            options.each do |question_option|
+              answer.options.build(question_option: question_option)
+            end
           end
 
-          it 'selected options are delimitted by semicolons' do
-            csv = Course::Survey::SurveyExportService.export(survey)
-            csv_arr = CSV.parse(csv)
-            expect(csv_arr[1][1]).to eq('O1;O2;O3')
+          it 'joins all options with semicolon in increasing weight' do
+            expect(subject).to eq('Nice;Ok;Cool')
           end
         end
 
-        context 'when no options are selected' do
-          it 'selected options are delimitted by semicolons' do
-            csv = Course::Survey::SurveyExportService.export(survey)
-            csv_arr = CSV.parse(csv)
-            expect(csv_arr[1][1]).to eq('')
+        context 'no options are selected' do
+          before do
+            answer.options.destroy_all
+          end
+
+          it 'returns an empty string' do
+            expect(subject).to eq('')
           end
         end
       end
 
       context 'MCQ question' do
-        let!(:question) { create(:course_survey_question, question_type: :multiple_choice, section: section) }
+        let(:question) do
+          section = create(:course_survey_section, survey: survey)
+          create(:course_survey_question, question_type: :multiple_choice, section: section)
+        end
+        let(:options) do
+          [
+            create(:course_survey_question_option, question: question, option: 'Cool', weight: 5),
+            create(:course_survey_question_option, question: question, option: 'Nice', weight: 2),
+            create(:course_survey_question_option, question: question, option: 'Ok', weight: 3)
+          ]
+        end
+        let(:answer) do
+          create(:course_survey_answer, question: question, response: response)
+        end
 
-        context 'when an option is selected' do
+        context 'one option is selected' do
           before do
-            answer_option_one = Course::Survey::AnswerOption.create(answer: answer, question_option: option_one)
+            answer.options.build(question_option: options[0])
           end
 
-          it 'selected options are delimitted by semicolons' do
-            csv = Course::Survey::SurveyExportService.export(survey)
-            csv_arr = CSV.parse(csv)
-            expect(csv_arr[1][1]).to eq('O1')
+          it 'returns the selected option' do
+            expect(subject).to eq('Cool')
           end
         end
 
-        context 'when no options are selected' do
-          it 'selected options are delimitted by semicolons' do
-            csv = Course::Survey::SurveyExportService.export(survey)
-            csv_arr = CSV.parse(csv)
-            expect(csv_arr[1][1]).to eq('')
+        context 'no options are selected' do
+          before do
+            answer.options.destroy_all
+          end
+
+          it 'returns an empty string' do
+            expect(subject).to eq('')
           end
         end
       end
 
-      context 'text response question' do
-        let!(:question) { create(:course_survey_question, question_type: :text, section: section) }
+      context 'Text response question' do
+        let(:question) do
+          section = create(:course_survey_section, survey: survey)
+          create(:course_survey_question, question_type: :text, section: section)
+        end
 
         context 'when there is text' do
-          let!(:answer) { create(:course_survey_answer, response: response, question: question, text_response: 'TEXT') }
+          let(:answer) do
+            create(:course_survey_answer, question: question, response: response, text_response: 'Fortnite')
+          end
 
-          it 'the text is included as a value' do
-            csv = Course::Survey::SurveyExportService.export(survey)
-            csv_arr = CSV.parse(csv)
-            expect(csv_arr[1][1]).to eq('TEXT')
+          it 'returns the text' do
+            expect(subject).to eq('Fortnite')
           end
         end
 
         context 'when there is no text' do
-          let!(:answer) { create(:course_survey_answer, response: response, question: question, text_response: nil) }
+          let(:answer) do
+            create(:course_survey_answer, question: question, response: response, text_response: nil)
+          end
 
-          it 'empty string is included as a value' do
-            csv = Course::Survey::SurveyExportService.export(survey)
-            csv_arr = CSV.parse(csv)
-            expect(csv_arr[1][1]).to eq('')
+          it 'returns an empty string' do
+            expect(subject).to eq('')
           end
         end
       end
