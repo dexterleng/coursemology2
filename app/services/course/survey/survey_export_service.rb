@@ -44,9 +44,11 @@ class Course::Survey::SurveyExportService
 
       question = answer.question
       if question.text?
-        return answer.text_response
+        return answer.text_response || ''
       elsif question.multiple_choice? || question.multiple_response?
-        options = answer.options.map { |option| option.question_option.option }
+        options = answer.options.
+                  sort_by { |option| option.question_option.weight }.
+                  map { |option| option.question_option.option }
         return options.join(';')
       else
         throw new Exception
