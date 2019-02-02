@@ -8,7 +8,10 @@ class Course::Survey::SurveyExportService
     # @param [Course::Survey] survey The survey to be converted
     # @return [String] The survey in csv format.
     def export(survey)
-      responses = Course::Survey::Response.includes(answers: [:options, :question]).where(survey: survey)
+      responses = Course::Survey::Response.
+                  where.not(submitted_at: nil).
+                  includes(answers: [:options, :question]).
+                  where(survey: survey)
       questions = survey.questions.sort_by(&:weight)
       header = generate_header(questions)
 
