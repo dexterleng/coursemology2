@@ -11,14 +11,67 @@ RSpec.describe Course::Survey::SurveyExportService do
       create(:survey, course: course, published: true, end_at: Time.zone.now + 1.day,
                       creator: course.creator, updater: course.creator)
     end
-    let(:response) do
-      create(:course_survey_response, survey: survey, creator: student,
-                                      submitted_at: Time.zone.now)
+
+    describe '#export' do
+      subject do
+        CSV.parse(Course::Survey::SurveyExportService.export(survey))
+      end
+
+      let!(:submitted_responses) do
+        [
+          create(:course_survey_response, survey: survey, submitted_at: Time.zone.now),
+          create(:course_survey_response, survey: survey, submitted_at: Time.zone.now),
+          create(:course_survey_response, survey: survey, submitted_at: Time.zone.now)
+        ]
+      end
+
+      let!(:unsubmitted_response) do
+        create(:course_survey_response, survey: survey, creator: student, submitted_at: nil)
+      end
+
+      let!(:questions) do
+        section = create(:course_survey_section, survey: survey)
+        [
+          create(:course_survey_question, question_type: :text, section: section, weight: 3),
+          create(:course_survey_question, question_type: :text, section: section, weight: 2),
+          create(:course_survey_question, question_type: :text, section: section, weight: 1)
+        ]
+      end
+
+      before do
+        submitted_responses.each do |response|
+          create(:course_survey_answer, question: questions[0], response: response, text_response: 'Q1 Answer')
+          create(:course_survey_answer, question: questions[1], response: response, text_response: 'Q2 Answer')
+          create(:course_survey_answer, question: questions[2], response: response, text_response: 'Q3 Answer')
+        end
+      end
+
+      context 'header' do
+        it 'first element is timestamp' do
+          expect(subject[0][0]).to eq('Timestamp')
+        end
+
+        it 'rest is question description in increasing weight' do
+          question_descriptions = questions.sort_by(&:weight).map(&:description)
+          expect(subject[0].slice(1..-1)).to eq(question_descriptions)
+        end
+      end
+
+      context 'rows' do
+        it 'ignores unsubmitted responses' do
+          expect(subject.size - 1).to eq(submitted_responses.size)
+        end
+      end
     end
 
     describe '#generate_row' do
       subject do
         Course::Survey::SurveyExportService.send(:generate_row, response, questions)
+      end
+
+      let(:response) do
+        create(:course_survey_response, survey: survey, creator: student,
+                                        submitted_at: Time.zone.now)
       end
 
       let(:questions) do
@@ -50,6 +103,11 @@ RSpec.describe Course::Survey::SurveyExportService do
     describe '#generate_value' do
       subject do
         Course::Survey::SurveyExportService.send(:generate_value, answer)
+      end
+
+      let(:response) do
+        create(:course_survey_response, survey: survey, creator: student,
+                                        submitted_at: Time.zone.now)
       end
 
       context 'MRQ question' do
