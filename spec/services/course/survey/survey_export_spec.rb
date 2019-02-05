@@ -47,13 +47,13 @@ RSpec.describe Course::Survey::SurveyExportService do
       end
 
       context 'header' do
-        it 'first element is timestamp' do
-          expect(subject[0][0]).to eq('Timestamp')
+        it 'first four elements are timestamp, course user id, name, and role' do
+          expect(subject[0].slice(0..3)).to eq(['Timestamp', 'Course User ID', 'Name', 'Role'])
         end
 
         it 'rest is question description in increasing weight' do
           question_descriptions = questions.sort_by(&:weight).map(&:description)
-          expect(subject[0].slice(1..-1)).to eq(question_descriptions)
+          expect(subject[0].slice(4..-1)).to eq(question_descriptions)
         end
       end
 
@@ -91,12 +91,23 @@ RSpec.describe Course::Survey::SurveyExportService do
         ]
       end
 
-      it 'returns an array with same length as no. of questions' do
-        expect(subject.size).to eq(questions.size)
+      it 'returns an array with four more elements than the no. of questions' do
+        expect(subject.size).to eq(questions.size + 4)
+      end
+
+      it 'first four elements are timestamp, course user id, name, and role' do
+        expect(subject.slice(0..3)).to eq(
+          [
+            response.submitted_at,
+            response.course_user.id,
+            response.course_user.name,
+            response.course_user.role
+          ]
+        )
       end
 
       it 'returns answers that correspond to questions' do
-        expect(subject).to eq(['Q1 Answer', 'Q2 Answer', 'Q3 Answer'])
+        expect(subject.slice(4..-1)).to eq(['Q1 Answer', 'Q2 Answer', 'Q3 Answer'])
       end
     end
 

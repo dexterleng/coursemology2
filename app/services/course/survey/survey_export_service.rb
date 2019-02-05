@@ -18,10 +18,7 @@ class Course::Survey::SurveyExportService
       CSV.generate(headers: true, force_quotes: true) do |csv|
         csv << header
         responses.each do |response|
-          row = []
-          row.push(response.submitted_at)
-          row.push(*generate_row(response, questions))
-          csv << row
+          csv << generate_row(response, questions)
         end
       end
     end
@@ -29,15 +26,22 @@ class Course::Survey::SurveyExportService
     private
 
     def generate_header(questions)
-      ['Timestamp'] + questions.map(&:description)
+      ['Timestamp', 'Course User ID', 'Name', 'Role'] + questions.map(&:description)
     end
 
     def generate_row(response, questions)
       answers_hash = response.answers.map { |answer| [answer.question_id, answer] }.to_h
-      questions.map do |question|
+      values = questions.map do |question|
         answer = answers_hash[question.id]
         generate_value(answer)
       end
+      [
+        response.submitted_at,
+        response.course_user.id,
+        response.course_user.name,
+        response.course_user.role,
+        *values
+      ]
     end
 
     def generate_value(answer)
