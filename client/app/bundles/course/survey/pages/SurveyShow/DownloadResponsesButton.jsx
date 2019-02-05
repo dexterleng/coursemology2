@@ -12,6 +12,12 @@ const translations = defineMessages({
   },
 });
 
+const styles = {
+  button: {
+    marginRight: 15,
+  },
+};
+
 class DownloadResponsesButton extends React.Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
@@ -23,6 +29,7 @@ class DownloadResponsesButton extends React.Component {
         <RaisedButton
           label={<FormattedMessage {...translations.download} />}
           onClick={() => this.props.dispatch(downloadSurvey())}
+          style={styles.button}
         />
       </>
     );
