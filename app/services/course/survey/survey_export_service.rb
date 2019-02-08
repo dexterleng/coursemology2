@@ -26,7 +26,12 @@ class Course::Survey::SurveyExportService
     private
 
     def generate_header(questions)
-      ['Timestamp', 'Course User ID', 'Name', 'Role'] + questions.map(&:description)
+      [
+        I18n.t('course.surveys.survey_export_service.timestamp'),
+        I18n.t('course.surveys.survey_export_service.course_user_id'),
+        I18n.t('course.surveys.survey_export_service.name'),
+        I18n.t('course.surveys.survey_export_service.role')
+      ] + questions.map(&:description)
     end
 
     def generate_row(response, questions)
