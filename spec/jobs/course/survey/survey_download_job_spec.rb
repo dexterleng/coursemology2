@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require 'rails_helper'
 
-RSpec.describe Course::Survey::ZipDownloadJob do
+RSpec.describe Course::Survey::SurveyDownloadJob do
   let(:instance) { Instance.default }
   with_tenant(:instance) do
     let(:course) { create(:course) }
@@ -9,7 +9,7 @@ RSpec.describe Course::Survey::ZipDownloadJob do
       create(:survey, course: course, published: true, end_at: Time.zone.now + 1.day,
                       creator: course.creator, updater: course.creator)
     end
-    subject { Course::Survey::ZipDownloadJob }
+    subject { Course::Survey::SurveyDownloadJob }
 
     it 'can be queued' do
       expect { subject.perform_later(survey) }.

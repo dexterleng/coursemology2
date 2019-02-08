@@ -60,7 +60,7 @@ class Course::Survey::SurveysController < Course::Survey::Controller
 
   def download
     authorize!(:manage, @survey)
-    job = Course::Survey::ZipDownloadJob.
+    job = Course::Survey::SurveyDownloadJob.
           perform_later(@survey).job
     respond_to do |format|
       format.html { redirect_to(job_path(job)) }
